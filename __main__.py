@@ -70,7 +70,8 @@ def main():
                 print("Connections dropped: ", client[1], err)
                 client[0].close()
 
-        cv2.imshow(title, img)
+        # uncomment when testing
+        # cv2.imshow(title, img)
     
     clientLookup.stop()
 
