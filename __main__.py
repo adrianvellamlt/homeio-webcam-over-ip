@@ -1,11 +1,12 @@
 import cv2
 import socket
-from sys import argv
+from sys import argv, platform
 from time import sleep
 from struct import pack
 from pickle import dumps
 from threading import Thread
 from numpy import zeros, uint8
+from subprocess import run, PIPE
 
 white = (255, 255, 255)
 
@@ -19,7 +20,11 @@ server = None
 rtsp_clients = []
 
 def rtsp_setup(port):
-    address = socket.gethostbyname("localhost")
+    address = socket.gethostbyname(socket.gethostname())
+    if address.startswith("127.") and (platform == "linux" or platform == "linux2"):
+        address = str(run("hostname -I", shell=True, stdout=PIPE).stdout)
+        address = address.replace("\\n", "").replace(" ", "")[2:-1]
+    print(address, port)
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind((address, port))
     server.listen(10)
@@ -52,11 +57,10 @@ def main():
         if ret == False and img is None:
             cap.release() # release
             cap = cv2.VideoCapture(cap_indx) # retry
-            cv2.imshow(title, offlineStreamImg)
+            # cv2.imshow(title, offlineStreamImg)
             continue
         
         cv2.rectangle(img, (0, 0), (img.shape[1], img.shape[0]), white, 2)
-        cv2.putText(img, title, (10, 30), 0, 1, white, 2)
 
         img = cv2.resize(img, dsize=(img.shape[1]//2, img.shape[0]//2), interpolation=cv2.INTER_CUBIC)
 
