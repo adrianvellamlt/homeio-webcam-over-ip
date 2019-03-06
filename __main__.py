@@ -50,19 +50,14 @@ def main():
 
     while True:
         ret, img = cap.read()
-        img = cv2.flip(img, 1)
-
-        cv2.waitKey(1)
 
         if ret == False and img is None:
             cap.release() # release
             cap = cv2.VideoCapture(cap_indx) # retry
+            img = offlineStreamImg
             # cv2.imshow(title, offlineStreamImg)
-            continue
-        
-        cv2.rectangle(img, (0, 0), (img.shape[1], img.shape[0]), white, 2)
-
-        img = cv2.resize(img, dsize=(img.shape[1]//2, img.shape[0]//2), interpolation=cv2.INTER_CUBIC)
+        else:
+            img = cv2.flip(img, 1)
 
         data = dumps(img)
         
@@ -74,8 +69,8 @@ def main():
                 print("Connections dropped: ", client[1], err)
                 client[0].close()
 
-        # uncomment when testing
         # cv2.imshow(title, img)
+        cv2.waitKey(1)
     
     clientLookup.stop()
 
