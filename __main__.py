@@ -10,19 +10,14 @@ from subprocess import run, PIPE
 
 white = (255, 255, 255)
 
-shape = (480, 640)
-offlineStreamImg = zeros((shape), dtype=uint8)
-textsize = cv2.getTextSize("Stream Offline", cv2.FONT_HERSHEY_SIMPLEX, 1, 2)[0]
-centreCoords = ( int((shape[1] - textsize[0]) / 2), int((shape[0] + textsize[1]) / 2) )
-cv2.putText(offlineStreamImg, "Stream Offline", centreCoords, cv2.FONT_HERSHEY_SIMPLEX, 1, (69, 53, 220), 2)
-
 server = None
 rtsp_clients = []
 
 def rtsp_setup(port):
     address = socket.gethostbyname(socket.gethostname())
     if address.startswith("127.") and (platform == "linux" or platform == "linux2"):
-        address = str(run("hostname -I", shell=True, stdout=PIPE).stdout)
+        # if result is loopback and system is linux, get first name returned by 'hostname -I'
+        address = str(run("hostname -I", shell=True, stdout=PIPE).stdout).split(" ")[0]
         address = address.replace("\\n", "").replace(" ", "")[2:-1]
     print(address, port)
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -33,14 +28,18 @@ def rtsp_setup(port):
 def main():
     global server
 
+    # set defaults args
     cap_indx = 0
     port = 8089
+    output_size = (480, 640)
 
-    if len(argv) == 3:
+    # set args if passed
+    if len(argv) == 4:
         cap_indx = int(argv[1])
         port = int(argv[2])
+        size = argv[3].split("x")
+        output_size = (int(size[1]), int(size[0]))
 
-    title = "Webcam - " + str(cap_indx)
     cap = cv2.VideoCapture(cap_indx)
 
     server = rtsp_setup(port)
@@ -51,11 +50,15 @@ def main():
     while True:
         ret, img = cap.read()
 
+        # resized to desired shape
+        if img.shape[0] != output_size[0] or img.shape[1] != output_size[1]: 
+            img = cv2.resize(img, output_size)
+
         if ret == False and img is None:
+            # don't send any data unless you have a stream
             cap.release() # release
             cap = cv2.VideoCapture(cap_indx) # retry
-            img = offlineStreamImg
-            # cv2.imshow(title, offlineStreamImg)
+            continue
         else:
             img = cv2.flip(img, 1)
 
@@ -68,13 +71,13 @@ def main():
                 rtsp_clients.remove(client)
                 print("Connections dropped: ", client[1], err)
                 client[0].close()
-
-        # cv2.imshow(title, img)
+        # mandatory for resource conservation
         cv2.waitKey(1)
-    
+    # stop looking for new clients
     clientLookup.stop()
 
 # Lookup for new clients to stream to
+# This is standard boiler plate code
 class RTSPClientLookup(Thread):
     def __init__(self):
         self.running = True
