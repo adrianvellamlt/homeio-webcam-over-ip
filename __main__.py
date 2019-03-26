@@ -50,17 +50,18 @@ def main():
     while True:
         ret, img = cap.read()
 
-        # resized to desired shape
-        if img.shape[0] != output_size[0] or img.shape[1] != output_size[1]: 
-            img = cv2.resize(img, output_size)
-
         if ret == False and img is None:
             # don't send any data unless you have a stream
             cap.release() # release
             cap = cv2.VideoCapture(cap_indx) # retry
+            cv2.waitKey(1)
             continue
         else:
             img = cv2.flip(img, 1)
+
+        # resized to desired shape
+        if img.shape[0] != output_size[0] or img.shape[1] != output_size[1]: 
+            img = cv2.resize(img, output_size)
 
         data = dumps(img)
         
