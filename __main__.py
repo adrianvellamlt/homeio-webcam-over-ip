@@ -14,11 +14,7 @@ server = None
 rtsp_clients = []
 
 def rtsp_setup(port):
-    address = socket.gethostbyname(socket.gethostname())
-    if address.startswith("127.") and (platform == "linux" or platform == "linux2"):
-        # if result is loopback and system is linux, get first name returned by 'hostname -I'
-        address = str(run("hostname -I", shell=True, stdout=PIPE).stdout).split(" ")[0]
-        address = address.replace("\\n", "").replace(" ", "")[2:]
+    address = os.environ["HOSTNAME"]
     print(address, port)
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind((address, port))
