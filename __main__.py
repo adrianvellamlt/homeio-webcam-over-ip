@@ -1,3 +1,4 @@
+import os
 import cv2
 import socket
 from sys import argv, platform
@@ -6,7 +7,6 @@ from struct import pack
 from pickle import dumps
 from threading import Thread
 from numpy import zeros, uint8
-from subprocess import run, PIPE
 
 white = (255, 255, 255)
 
