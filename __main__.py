@@ -17,7 +17,7 @@ def rtsp_setup(port):
     address = os.environ["HOSTNAME"]
     print(address, port)
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind((address, port))
+    server.bind(("", port))
     server.listen(10)
     return server
 
